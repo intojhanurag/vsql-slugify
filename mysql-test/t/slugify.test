@@ -1,0 +1,49 @@
+INSTALL EXTENSION vsql_slugify;
+
+--echo # Basic slugification
+SELECT vsql_slugify.slugify('Hello, World!');
+SELECT vsql_slugify.slugify('UPPERCASE TEST');
+
+--echo # Accented characters are transliterated
+SELECT vsql_slugify.slugify('café résumé naïve');
+SELECT vsql_slugify.slugify('München Straße');
+SELECT vsql_slugify.slugify('São Paulo');
+
+--echo # Issue examples
+SELECT vsql_slugify.slugify('Crème Brûlée — 2026 Edition');
+
+--echo # Multiple separators collapse into one
+SELECT vsql_slugify.slugify('mixed    spaces   and---dashes');
+
+--echo # Leading and trailing separators are trimmed
+SELECT vsql_slugify.slugify('  --Hello--World--  ');
+
+--echo # Already a slug
+SELECT vsql_slugify.slugify('already-a-slug');
+
+--echo # Numbers are preserved
+SELECT vsql_slugify.slugify('123 Numbers 456');
+
+--echo # Single character
+SELECT vsql_slugify.slugify('a');
+
+--echo # Empty string
+SELECT vsql_slugify.slugify('');
+
+--echo # Only special characters
+SELECT vsql_slugify.slugify('!!!@@@###');
+
+--echo # NULL input
+SELECT vsql_slugify.slugify(NULL);
+
+--echo # Deterministic: same input gives same output
+SELECT vsql_slugify.slugify('Test Input') = vsql_slugify.slugify('Test Input') AS is_deterministic;
+
+--echo # Can be used in a generated column
+CREATE TABLE articles (title TEXT, slug TEXT GENERATED ALWAYS AS (vsql_slugify.slugify(title)) STORED);
+INSERT INTO articles (title) VALUES ('Hello, World!');
+INSERT INTO articles (title) VALUES ('café résumé');
+SELECT title, slug FROM articles ORDER BY slug;
+DROP TABLE articles;
+
+UNINSTALL EXTENSION vsql_slugify;

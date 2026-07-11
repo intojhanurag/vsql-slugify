@@ -1,0 +1,68 @@
+INSTALL EXTENSION vsql_slugify;
+# Basic slugification
+SELECT vsql_slugify.slugify('Hello, World!');
+vsql_slugify.slugify('Hello, World!')
+hello-world
+SELECT vsql_slugify.slugify('UPPERCASE TEST');
+vsql_slugify.slugify('UPPERCASE TEST')
+uppercase-test
+# Accented characters are transliterated
+SELECT vsql_slugify.slugify('café résumé naïve');
+vsql_slugify.slugify('café résumé naïve')
+cafe-resume-naive
+SELECT vsql_slugify.slugify('München Straße');
+vsql_slugify.slugify('München Straße')
+munchen-strasse
+SELECT vsql_slugify.slugify('São Paulo');
+vsql_slugify.slugify('São Paulo')
+sao-paulo
+# Issue examples
+SELECT vsql_slugify.slugify('Crème Brûlée — 2026 Edition');
+vsql_slugify.slugify('Crème Brûlée — 2026 Edition')
+creme-brulee-2026-edition
+# Multiple separators collapse into one
+SELECT vsql_slugify.slugify('mixed    spaces   and---dashes');
+vsql_slugify.slugify('mixed    spaces   and---dashes')
+mixed-spaces-and-dashes
+# Leading and trailing separators are trimmed
+SELECT vsql_slugify.slugify('  --Hello--World--  ');
+vsql_slugify.slugify('  --Hello--World--  ')
+hello-world
+# Already a slug
+SELECT vsql_slugify.slugify('already-a-slug');
+vsql_slugify.slugify('already-a-slug')
+already-a-slug
+# Numbers are preserved
+SELECT vsql_slugify.slugify('123 Numbers 456');
+vsql_slugify.slugify('123 Numbers 456')
+123-numbers-456
+# Single character
+SELECT vsql_slugify.slugify('a');
+vsql_slugify.slugify('a')
+a
+# Empty string
+SELECT vsql_slugify.slugify('');
+vsql_slugify.slugify('')
+
+# Only special characters
+SELECT vsql_slugify.slugify('!!!@@@###');
+vsql_slugify.slugify('!!!@@@###')
+
+# NULL input
+SELECT vsql_slugify.slugify(NULL);
+vsql_slugify.slugify(NULL)
+NULL
+# Deterministic: same input gives same output
+SELECT vsql_slugify.slugify('Test Input') = vsql_slugify.slugify('Test Input') AS is_deterministic;
+is_deterministic
+1
+# Can be used in a generated column
+CREATE TABLE articles (title TEXT, slug TEXT GENERATED ALWAYS AS (vsql_slugify.slugify(title)) STORED);
+INSERT INTO articles (title) VALUES ('Hello, World!');
+INSERT INTO articles (title) VALUES ('café résumé');
+SELECT title, slug FROM articles ORDER BY slug;
+title	slug
+café résumé	cafe-resume
+Hello, World!	hello-world
+DROP TABLE articles;
+UNINSTALL EXTENSION vsql_slugify;
