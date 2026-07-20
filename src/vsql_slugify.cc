@@ -141,6 +141,8 @@ void vdf_slugify(StringArg input, StringResult out) {
     }
   }
 
+  size_t cap = out.buffer().size();
+  if (result.size() > cap) result.resize(cap);
   if (!result.empty() && result.back() == '-') {
     result.pop_back();
   }
@@ -153,6 +155,6 @@ VEF_GENERATE_ENTRY_POINTS(
         .func(make_func<&vdf_slugify>("slugify")
                   .returns(STRING)
                   .param(STRING)
-                  .buffer_size(1024)
+                  .buffer_size(65536)
                   .deterministic()
                   .build()))
