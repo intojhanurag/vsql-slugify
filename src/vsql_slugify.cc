@@ -17,10 +17,24 @@
 
 #include <cctype>
 #include <cstdint>
+#include <exception>
 #include <string>
 #include <string_view>
 
 using namespace vsql;
+
+// An exception that escapes a VDF aborts mysqld for every connection. Turn it
+// into a warning instead, so only this row returns NULL.
+template <typename Result, typename Body>
+static void guard(Result &out, Body &&body) {
+  try {
+    body();
+  } catch (const std::exception &e) {
+    out.warning(e.what());
+  } catch (...) {
+    out.warning("unexpected error");
+  }
+}
 
 // Transliterates a Unicode codepoint to its ASCII approximation.
 // Returns nullptr for codepoints with no mapping.
@@ -105,7 +119,7 @@ static uint32_t decode_utf8(const char *s, size_t len, size_t &pos) {
 
 // slugify(value TEXT) -> TEXT
 // Produces a URL-safe slug: transliterate, lowercase, collapse non-alnum to '-', trim.
-void vdf_slugify(StringArg input, StringResult out) {
+static void slugify(StringArg input, StringResult out) {
   if (input.is_null()) {
     out.set_null();
     return;
@@ -148,6 +162,10 @@ void vdf_slugify(StringArg input, StringResult out) {
   }
 
   out.set(std::string_view(result));
+}
+
+void vdf_slugify(StringArg input, StringResult out) {
+  guard(out, [&] { slugify(input, out); });
 }
 
 VEF_GENERATE_ENTRY_POINTS(
