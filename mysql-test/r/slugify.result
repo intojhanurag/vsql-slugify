@@ -48,6 +48,10 @@ vsql_slugify.slugify('')
 SELECT vsql_slugify.slugify('!!!@@@###');
 vsql_slugify.slugify('!!!@@@###')
 
+# A result cut at the 65536-byte buffer does not end on a separator
+SELECT RIGHT(vsql_slugify.slugify(CONCAT(REPEAT('a', 65535), ' b')), 1) != '-' AS no_trailing_separator;
+no_trailing_separator
+1
 # NULL input
 SELECT vsql_slugify.slugify(NULL);
 vsql_slugify.slugify(NULL)

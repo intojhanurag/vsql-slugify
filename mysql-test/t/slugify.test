@@ -33,6 +33,9 @@ SELECT vsql_slugify.slugify('');
 --echo # Only special characters
 SELECT vsql_slugify.slugify('!!!@@@###');
 
+--echo # A result cut at the 65536-byte buffer does not end on a separator
+SELECT RIGHT(vsql_slugify.slugify(CONCAT(REPEAT('a', 65535), ' b')), 1) != '-' AS no_trailing_separator;
+
 --echo # NULL input
 SELECT vsql_slugify.slugify(NULL);
 
