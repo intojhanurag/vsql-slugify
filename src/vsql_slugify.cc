@@ -155,8 +155,6 @@ static void slugify(StringArg input, StringResult out) {
     }
   }
 
-  size_t cap = out.buffer().size();
-  if (result.size() > cap) result.resize(cap);
   if (!result.empty() && result.back() == '-') {
     result.pop_back();
   }
