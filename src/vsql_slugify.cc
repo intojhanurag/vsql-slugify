@@ -155,6 +155,12 @@ static void slugify(StringArg input, StringResult out) {
     }
   }
 
+  // The stable SDK's set() cuts at the buffer and reports the cut size, so the
+  // server never grows the buffer. Cut here first, so the trim below also drops
+  // a separator left at the cut. Remove this once the stable SDK reports the
+  // full size, as villagesql-server #728 does for the dev SDK.
+  size_t cap = out.buffer().size();
+  if (result.size() > cap) result.resize(cap);
   if (!result.empty() && result.back() == '-') {
     result.pop_back();
   }
